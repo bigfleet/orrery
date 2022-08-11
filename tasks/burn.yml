@@ -1,0 +1,160 @@
+# - name: Delete instance of Key Vault for eagle
+#   azure.azcollection.azure_rm_keyvault:
+#     resource_group: "{{ azure_aks_rg_name }}"
+#     vault_name: eaglekv
+#     state: absent
+
+- include_role:
+    name: bigfleet.eagle
+    tasks_from: load_rna.yml
+
+- set_fact:
+    eagle_aad_app_name: EagleTesting
+    azure_aks_rg_name: eagle-centralus
+
+- name: "Clean up utility AKS instances"
+  azure_rm_aks:
+    name: "{{ azure_aks_cluster_name }}-{{ item }}"
+    resource_group: "{{ azure_aks_rg_name }}"
+    location: "{{ azure_location }}"
+    state: absent
+  vars:
+    azure_aks_cluster_name: ansible-aks
+  loop: "{{ targets }}"
+
+- name: "Clean up AKS instances from RNA"
+  azure_rm_aks:
+    name: "{{ eagle_rna.name }}-{{ item.name }}"
+    resource_group: "{{ azure_aks_rg_name }}"
+    location: "{{ azure_location }}"
+    state: absent
+  loop: "{{ eagle_rna.clusters }}"
+  when: "'rna' is in targets"
+
+- name: Look up the Gitlab app credentials in {{ eagle_kv_vault_name }}
+  command:
+    cmd: "az keyvault secret show --vault-name '{{ eagle_kv_vault_name }}' --name 'gitlab-auth-secret-{{eagle_mark}}-json'"
+  register: _gitlab_kv_secret_raw
+  when: "'gitlab' is in targets"
+
+- debug:
+    var: _gitlab_kv_secret_raw
+  when: "'gitlab' is in targets"
+
+
+
+- set_fact:
+    gitlab_data: "{{ (_gitlab_kv_secret_raw.stdout | from_json ).value }}"
+  when: "'gitlab' is in targets"
+
+- name: Delete the Azure AD application for gitlab
+  azure.azcollection.azure_rm_adapplication:
+    tenant: "{{ azure_tenant_id }}"
+    app_id: "{{ gitlab_data.appId }}"
+    state: absent
+  when: "'gitlab' is in targets"
+
+- name: Delete the gitlab auth secret stored in {{ eagle_kv_vault_name }}
+  command:
+    cmd: "az keyvault secret delete --vault-name '{{ eagle_kv_vault_name }}' --name 'gitlab-auth-secret-{{eagle_mark}}-json'"
+  register: _gitlab_kv_secret_raw
+  when: "'gitlab' is in targets"
+
+- name: Pause for 3 minutes to age soft-delete
+  pause:
+    minutes: 3
+  when: "'gitlab' is in targets"
+
+- name: Purge the gitlab auth secret stored in {{ eagle_kv_vault_name }}
+  command:
+    cmd: "az keyvault secret purge --vault-name '{{ eagle_kv_vault_name }}' --name 'gitlab-auth-secret-{{eagle_mark}}-json'"
+  register: _gitlab_kv_secret_raw
+  when: "'gitlab' is in targets"
+
+- name: List all applications
+  azure.azcollection.azure_rm_adapplication_info:
+    tenant: "{{ azure_tenant_id }}"
+  register: azure_adapps
+
+- name: "Finding AAD application {{eagle_aad_app_name}} by name"
+  set_fact:
+    azure_adapp: "{{ azure_adapps | json_query(app_q) }}"
+  vars:
+    app_q: "applications[?app_display_name=='{{ eagle_aad_app_name }}'] | [0]"
+
+- name: Debug AAD application data
+  debug:
+    var: azure_adapp
+
+- name: get ad sp info
+  azure.azcollection.azure_rm_adserviceprincipal_info:
+    app_id: "{{ azure_adapp.app_id }}"
+    tenant: "{{ azure_tenant_id }}"
+  register: az_ad_sp_info
+  when: azure_adapp != ""
+
+- debug:
+    var: az_ad_sp_info
+    verbosity: 1
+
+- name: Get role assignments for specific scope with no inherited assignments
+  azure.azcollection.azure_rm_roleassignment_info:
+    scope: "/subscriptions/{{ azure_subscription_id }}"
+    strict_scope_match: True
+  register: az_subscription_roles
+  no_log: true
+
+- debug:
+    var: az_subscription_roles
+    verbosity: 1
+
+- name: "Identifying vacated SP access"
+  set_fact:
+    _sp_sub_assignment: "{{ az_subscription_roles | json_query(v_q) }}"
+  vars:
+    v_q: "roleassignments[?principal_type=='ServicePrincipal' && principal_id=='{{az_ad_sp_info.service_principals[0].object_id}}']"
+  when: (az_ad_sp_info.service_principals | length) == 1
+
+- debug:
+    var: _sp_sub_assignment
+    verbosity: 1
+
+- name: Pruning dead SP assignment
+  azure.azcollection.azure_rm_roleassignment:
+    id: "{{ item.id }}"
+    state: absent
+  loop: "{{ _sp_sub_assignment }}"
+  when: _sp_sub_assignment is defined and azure_adapp != "" and 'tekton' is in targets
+
+- name: Delete the Azure AD application for eagle
+  azure.azcollection.azure_rm_adapplication:
+    tenant: "{{ azure_tenant_id }}"
+    app_id: "{{ azure_adapp.app_id }}"
+    state: absent
+  when: azure_adapp != "" and 'tekton' is in targets
+  ignore_errors: True
+
+- name: "Delete the {{ eagle_gitops_repo_name }} repository"
+  community.general.github_repo:
+    access_token: "{{ github_token }}"
+    name: "{{ eagle_gitops_repo_name }}"
+    organization: "{{ scm_config.organization }}"
+    state: absent
+  when: "'rna' is in targets"
+
+- name: "Delete the primary {{ eagle_rna.name }} repository"
+  community.general.github_repo:
+    access_token: "{{ github_token }}"
+    name: "{{ eagle_rna.name }}"
+    organization: "{{ scm_config.organization }}"
+    state: absent
+  when: "'rna' is in targets"
+
+- name: 
+  community.general.github_repo:
+    access_token: "{{ github_token }}"
+    name: "{{ item.name }}"
+    organization: "{{ scm_config.organization }}"
+    state: absent
+  when: "'rna' is in targets"
+  loop: "{{ eagle_rna.applications }}"

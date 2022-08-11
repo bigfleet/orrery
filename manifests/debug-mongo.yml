@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: jre-sleep
+  namespace: zimcore
+  labels:
+    app: zimcore
+spec:
+  containers:
+  - name: sbmk
+    image: openjdk:11-jre-slim-buster
+    command: ['/bin/sleep', 'infinity']

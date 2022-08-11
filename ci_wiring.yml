@@ -1,0 +1,23 @@
+- hosts: localhost
+  vars:
+    cloud_provider: azure
+    domain: "{{ fqdn }}"
+    credential_method: key_vault
+    slug: "{{ query('community.general.random_string', upper=false, numbers=true, special=false)[0] }}"
+  vars_files:
+    - vars/eagle.yml
+    - vars/dns.yml
+    - vars/ssh.yml
+    - vars/azure.yml
+    - vars/credentials.yml
+    - vars/sentry.yml
+  tasks:
+  - include_role:
+      name: bigfleet.eagle
+    vars:
+      phase: wiring
+      eagle_params:
+        azure:
+          resource_group_name: "eagle-{{azure_location}}"
+          dns_resource_group_name: "eagle-dns-{{azure_location}}"
+        issuer_provider: "{{issuer_provider | default('letsencrypt') }}"

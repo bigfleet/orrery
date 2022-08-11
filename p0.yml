@@ -1,0 +1,62 @@
+- hosts: localhost
+  vars:
+    cloud_provider: azure
+    domain: "{{ fqdn }}"
+    slug: "{{ query('community.general.random_string', upper=false, numbers=true, special=false)[0] }}"
+  vars_files:
+    - vars/eagle.yml
+    - vars/dns.yml
+    - vars/ssh.yml
+    - vars/azure.yml
+    - vars/github.yml
+    - vars/credentials.yml
+    - vars/sentry.yml
+  tasks:
+  - include_role:
+      name: bigfleet.eagle
+    vars:
+      phase: 0
+      eagle_params:
+        azure:
+          resource_group_name: "eagle-{{azure_location}}"
+          dns_resource_group_name: "eagle-dns-{{azure_location}}"
+        kv:
+          key_name: eaglespcreds
+          vault_name: "{{ eagle_kv_vault_name }}"
+        issuer_provider: "{{ issuer_provider | default('letsencrypt') }}"
+
+  - include_role:
+      name: bigfleet.gitlab
+    vars: 
+      gitlab_params:
+        issuer_provider: "{{ issuer_provider | default('letsencrypt') }}"
+        azure:
+          ad_application_name: Morgan Stanley iP2P Gitlab
+          auth_secret_name: "gitlab-auth-secret-{{eagle_mark}}"
+        agent_pool_profile: himem
+        dns: 
+          full_name: "{{dns_prefix}}"
+          registrar: dnsimple
+        kv:
+          enabled: true
+          vault_name: "{{ eagle_kv_vault_name }}"
+        resource_group_name: "eagle-{{azure_location}}"
+        dns_resource_group_name: "eagle-dns-{{azure_location}}"
+        gitlab_admin_email: john.keene@endava.com
+        tags: "{{ az_common_tags }}"
+        user_list: 
+          - name: "John Keene"
+            is_admin: true
+            email: john.keene@levvel.io
+            username: john.keene
+          - name: "Jim Van Fleet"
+            is_admin: false
+            email: jim.van.fleet@levvel.io
+            username: james.vanfleet
+        domain_allow_list:
+          - endava.com
+          - levvel.io
+        create_users: true
+      cert_email: john.keene@endava.com
+      k8s_namespace: gitlab
+    when: false

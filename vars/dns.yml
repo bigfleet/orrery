@@ -1,0 +1,3 @@
+base_domain: bigfleet.dev
+dns_prefix: "{{ eagle_animal }}"
+fqdn: "{{ dns_prefix }}.{{ base_domain }}"

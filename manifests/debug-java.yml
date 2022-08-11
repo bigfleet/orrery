@@ -1,0 +1,42 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    app: zimcore
+  name: zimcore-6977f76cdd-debug
+  namespace: zimcore
+spec:
+  containers:
+  - image: adoptopenjdk/openjdk11:debian
+    imagePullPolicy: IfNotPresent
+    name: zimcore
+    command:
+      - sleep
+      - infinity
+    ports:
+    - containerPort: 9021
+      name: http
+      protocol: TCP
+    resources:
+      limits:
+        cpu: "2"
+        memory: 512Mi
+      requests:
+        cpu: 100m
+        memory: 64Mi
+    volumeMounts:
+    - mountPath: /app/config/rabbitmq
+      name: rabbitmq-springboot-api
+    - mountPath: /app/config/mongodb
+      name: mongodb-springboot-api
+  imagePullSecrets:
+  - name: flux2-pull-secret
+  volumes:
+  - name: rabbitmq-springboot-api
+    secret:
+      defaultMode: 420
+      secretName: rabbitmq-springboot-api-2mbb28h9m8
+  - name: mongodb-springboot-api
+    secret:
+      defaultMode: 420
+      secretName: mongodb-springboot-api-555fctfhk5

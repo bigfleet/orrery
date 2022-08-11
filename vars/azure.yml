@@ -1,0 +1,9 @@
+azure_subscription_id: 523c6e9a-f0df-4c42-ae06-034ad8f505ef
+azure_tenant_id: "0b3fc178-b730-4e8b-9843-e81259237b77"
+
+azure_location: centralus
+registrar: dnsimple
+az_common_tags:
+  phase: testing
+  persistence: transient
+  owner: jvf
