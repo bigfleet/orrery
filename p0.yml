@@ -8,7 +8,6 @@
     - vars/dns.yml
     - vars/ssh.yml
     - vars/azure.yml
-    - vars/github.yml
     - vars/credentials.yml
     - vars/sentry.yml
   tasks:
