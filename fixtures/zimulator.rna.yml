@@ -1,0 +1,27 @@
+name: zimulator
+dns_prefix: zimcore.io
+domain: bigfleet.dev
+clusters:
+  - name: production
+    size: default
+  - name: staging
+    size: default
+applications:
+  - name: zimcore
+    type: springboot-api
+    services:
+      - mongodb
+      - rabbitmq
+    public: false
+  - name: boz-api
+    public: true
+    type: springboot-api
+    subdomain: boz
+    path: /api/
+    client_of:
+      - zimcore
+  - name: boz-ui
+    public: true
+    type: angular
+    subdomain: boz
+    path: /
