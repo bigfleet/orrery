@@ -1,11 +1,6 @@
-# Regenesis
+# Orrery
 
-Top level domain intended to be the birthplace of bigfleet.eagle and other roles.
-
-## Active issues
-
-* nginx ingress incantation to rack up API providers in the appropriate path
-* Work with Spring Boot authentication a bit
+This directory helps get Eagle installed and rolling.
 
 
 ## Backlog
@@ -17,8 +12,6 @@ Top level domain intended to be the birthplace of bigfleet.eagle and other roles
 * Need to speed up/bypass image construction (check if images need to be built using mk3 designations)
 * Need to make sure builds do not contend for filesystems
 * Rotate passwords / tokens (need to get broken down one by one)
-* ZeroSSL support?  (At least as an option to relieve the let's encrypt rate limits...)
-* While Tekton-eagle is performing eagle-like tasks, it needs a high permissions rate.  After that it doesn't.  We need to build a de-escalator.
 
 ## Upcoming major initiatives
 
