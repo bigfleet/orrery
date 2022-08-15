@@ -1,1 +1,0 @@
-FROM node:current-bullseye
