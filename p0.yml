@@ -19,6 +19,7 @@
         azure:
           resource_group_name: "eagle-{{azure_location}}"
           dns_resource_group_name: "eagle-dns-{{azure_location}}"
+          location: "{{azure_location}}"
         kv:
           key_name: eaglespcreds
           vault_name: "{{ eagle_kv_vault_name }}"
@@ -32,6 +33,8 @@
         azure:
           ad_application_name: Morgan Stanley iP2P Gitlab
           auth_secret_name: "gitlab-auth-secret-{{eagle_mark}}"
+          resource_group_name: "eagle-{{azure_location}}"
+          dns_resource_group_name: "eagle-dns-{{azure_location}}"
         agent_pool_profile: himem
         dns: 
           full_name: "{{dns_prefix}}"
@@ -39,8 +42,6 @@
         kv:
           enabled: true
           vault_name: "{{ eagle_kv_vault_name }}"
-        resource_group_name: "eagle-{{azure_location}}"
-        dns_resource_group_name: "eagle-dns-{{azure_location}}"
         gitlab_admin_email: john.keene@endava.com
         tags: "{{ az_common_tags }}"
         user_list: 
