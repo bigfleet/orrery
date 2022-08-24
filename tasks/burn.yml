@@ -71,67 +71,69 @@
   register: _gitlab_kv_secret_raw
   when: "'gitlab' is in targets"
 
-- name: List all applications
-  azure.azcollection.azure_rm_adapplication_info:
-    tenant: "{{ azure_tenant_id }}"
-  register: azure_adapps
+# No longer as important to burn the SP -- sort of important NOT to just now
 
-- name: "Finding AAD application {{eagle_aad_app_name}} by name"
-  set_fact:
-    azure_adapp: "{{ azure_adapps | json_query(app_q) }}"
-  vars:
-    app_q: "applications[?app_display_name=='{{ eagle_aad_app_name }}'] | [0]"
+# - name: List all applications
+#   azure.azcollection.azure_rm_adapplication_info:
+#     tenant: "{{ azure_tenant_id }}"
+#   register: azure_adapps
 
-- name: Debug AAD application data
-  debug:
-    var: azure_adapp
+# - name: "Finding AAD application {{eagle_aad_app_name}} by name"
+#   set_fact:
+#     azure_adapp: "{{ azure_adapps | json_query(app_q) }}"
+#   vars:
+#     app_q: "applications[?app_display_name=='{{ eagle_aad_app_name }}'] | [0]"
 
-- name: get ad sp info
-  azure.azcollection.azure_rm_adserviceprincipal_info:
-    app_id: "{{ azure_adapp.app_id }}"
-    tenant: "{{ azure_tenant_id }}"
-  register: az_ad_sp_info
-  when: azure_adapp != ""
+# - name: Debug AAD application data
+#   debug:
+#     var: azure_adapp
 
-- debug:
-    var: az_ad_sp_info
-    verbosity: 1
+# - name: get ad sp info
+#   azure.azcollection.azure_rm_adserviceprincipal_info:
+#     app_id: "{{ azure_adapp.app_id }}"
+#     tenant: "{{ azure_tenant_id }}"
+#   register: az_ad_sp_info
+#   when: azure_adapp != ""
 
-- name: Get role assignments for specific scope with no inherited assignments
-  azure.azcollection.azure_rm_roleassignment_info:
-    scope: "/subscriptions/{{ azure_subscription_id }}"
-    strict_scope_match: True
-  register: az_subscription_roles
-  no_log: true
+# - debug:
+#     var: az_ad_sp_info
+#     verbosity: 1
 
-- debug:
-    var: az_subscription_roles
-    verbosity: 1
+# - name: Get role assignments for specific scope with no inherited assignments
+#   azure.azcollection.azure_rm_roleassignment_info:
+#     scope: "/subscriptions/{{ azure_subscription_id }}"
+#     strict_scope_match: True
+#   register: az_subscription_roles
+#   no_log: true
 
-- name: "Identifying vacated SP access"
-  set_fact:
-    _sp_sub_assignment: "{{ az_subscription_roles | json_query(v_q) }}"
-  vars:
-    v_q: "roleassignments[?principal_type=='ServicePrincipal' && principal_id=='{{az_ad_sp_info.service_principals[0].object_id}}']"
-  when: (az_ad_sp_info.service_principals | length) == 1
+# - debug:
+#     var: az_subscription_roles
+#     verbosity: 1
 
-- debug:
-    var: _sp_sub_assignment
-    verbosity: 1
+# - name: "Identifying vacated SP access"
+#   set_fact:
+#     _sp_sub_assignment: "{{ az_subscription_roles | json_query(v_q) }}"
+#   vars:
+#     v_q: "roleassignments[?principal_type=='ServicePrincipal' && principal_id=='{{az_ad_sp_info.service_principals[0].object_id}}']"
+#   when: (az_ad_sp_info.service_principals | length) == 1
 
-- name: Pruning dead SP assignment
-  azure.azcollection.azure_rm_roleassignment:
-    id: "{{ item.id }}"
-    state: absent
-  loop: "{{ _sp_sub_assignment }}"
-  when: _sp_sub_assignment is defined and azure_adapp != "" and 'tekton' is in targets
+# - debug:
+#     var: _sp_sub_assignment
+#     verbosity: 1
 
-- name: Delete the Azure AD application for eagle
+# - name: Pruning dead SP assignment
+#   azure.azcollection.azure_rm_roleassignment:
+#     id: "{{ item.id }}"
+#     state: absent
+#   loop: "{{ _sp_sub_assignment }}"
+#   when: _sp_sub_assignment is defined and azure_adapp != "" and 'tekton' is in targets
+
+- name: Delete the OIDC Azure AD application for eagle
   azure.azcollection.azure_rm_adapplication:
     tenant: "{{ azure_tenant_id }}"
     app_id: "{{ azure_adapp.app_id }}"
     state: absent
-  when: azure_adapp != "" and 'tekton' is in targets
+  when: false #azure_adapp != "" and 'tekton' is in targets
   ignore_errors: True
 
 - name: "Delete the {{ eagle_gitops_repo_name }} repository"
@@ -150,7 +152,7 @@
     state: absent
   when: "'rna' is in targets"
 
-- name: 
+- name: Delete the fluxing repo
   community.general.github_repo:
     access_token: "{{ github_token }}"
     name: "{{ item.name }}"
