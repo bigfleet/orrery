@@ -9,7 +9,6 @@
     tasks_from: load_rna.yml
 
 - set_fact:
-    eagle_aad_app_name: EagleTesting
     azure_aks_rg_name: eagle-centralus
 
 - name: "Clean up utility AKS instances"
@@ -41,8 +40,6 @@
     var: _gitlab_kv_secret_raw
   when: "'gitlab' is in targets"
 
-
-
 - set_fact:
     gitlab_data: "{{ (_gitlab_kv_secret_raw.stdout | from_json ).value }}"
   when: "'gitlab' is in targets"
@@ -71,23 +68,23 @@
   register: _gitlab_kv_secret_raw
   when: "'gitlab' is in targets"
 
-# No longer as important to burn the SP -- sort of important NOT to just now
+- name: List all applications
+  azure.azcollection.azure_rm_adapplication_info:
+    tenant: "{{ azure_tenant_id }}"
+  register: azure_adapps
 
-# - name: List all applications
-#   azure.azcollection.azure_rm_adapplication_info:
-#     tenant: "{{ azure_tenant_id }}"
-#   register: azure_adapps
+- name: "Finding AAD application {{eagle_ad_application_name}} by name"
+  set_fact:
+    azure_adapp: "{{ azure_adapps | json_query(app_q) }}"
+  vars:
+    app_q: "applications[?app_display_name=='{{ eagle_ad_application_name }}'] | [0]"
 
-# - name: "Finding AAD application {{eagle_aad_app_name}} by name"
-#   set_fact:
-#     azure_adapp: "{{ azure_adapps | json_query(app_q) }}"
-#   vars:
-#     app_q: "applications[?app_display_name=='{{ eagle_aad_app_name }}'] | [0]"
+- name: Debug AAD application data
+  debug:
+    var: azure_adapp
 
-# - name: Debug AAD application data
-#   debug:
-#     var: azure_adapp
-
+# The OIDC app is not getting elevated SP permissions
+# 
 # - name: get ad sp info
 #   azure.azcollection.azure_rm_adserviceprincipal_info:
 #     app_id: "{{ azure_adapp.app_id }}"
@@ -133,7 +130,7 @@
     tenant: "{{ azure_tenant_id }}"
     app_id: "{{ azure_adapp.app_id }}"
     state: absent
-  when: false #azure_adapp != "" and 'tekton' is in targets
+  when: azure_adapp != ""
   ignore_errors: True
 
 - name: "Delete the {{ eagle_gitops_repo_name }} repository"
@@ -152,7 +149,7 @@
     state: absent
   when: "'rna' is in targets"
 
-- name: Delete the fluxing repo
+- name: Delete the fluxing repos
   community.general.github_repo:
     access_token: "{{ github_token }}"
     name: "{{ item.name }}"
