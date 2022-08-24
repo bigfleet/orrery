@@ -21,3 +21,5 @@
           resource_group_name: "eagle-{{azure_location}}"
           dns_resource_group_name: "eagle-dns-{{azure_location}}"
         issuer_provider: "{{issuer_provider | default('letsencrypt') }}"
+        kv:
+          vault_name: "{{ eagle_kv_vault_name }}"
