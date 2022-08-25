@@ -15,3 +15,5 @@ pkgs=$(IFS=, ; echo "${defaultPackages[*]}")
 url="https://start.spring.io/starter.zip?type=gradle-project&language=java&bootVersion=$PARAM_SPRINGBOOT_VERSION&groupId=$pkg&artifactId=$name&name=$name&description=Demo%20project%20for%20$name&packageName=$pkg.$name&packaging=jar&javaVersion=$PARAM_JAVA_VERSION&dependencies=$pkgs"
 
 curl -o project.zip $url
+unzip project.zip
+rm project.zip
