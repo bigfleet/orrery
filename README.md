@@ -7,9 +7,7 @@ This directory helps get Eagle installed and rolling.
 
 * Ensure front-end and API responses have an endpoint (or UI affordance) which identifies the artifact that was responsible for their creation.
 * Ensure that springboot-api builds have what they need to query API token liveness from Azure AD.
-* Correct the links with which the build status links back to reference the routable dashboard.  (Webhook endpoints work.)
 * Resource consumption guidelines as patches (per RNA 'type')
-* Need to speed up/bypass image construction (check if images need to be built using mk3 designations)
 * Need to make sure builds do not contend for filesystems
 * Rotate passwords / tokens (need to get broken down one by one)
 
