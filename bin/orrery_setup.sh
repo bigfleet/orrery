@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#setup script to get ansible controller ready to run regenisis
+#setup script to get ansible controller ready to run orrery
 #currently only supports debian based systems, redhat support TBD
 #NOTE before you run setup git ssh key
 
@@ -83,11 +83,12 @@ ln -s $(pwd)/bigfleet.tekton ~/.ansible/roles/bigfleet.tekton
 ln -s $(pwd)/bigfleet.gitlab ~/.ansible/roles/bigfleet.gitlab
 
 #install additional python requirements
-./regenesis/bin/pysetup.sh
+./orrery/bin/pysetup.sh
 
 #setup ansible vault
 read -sep 'Enter the ansible vault password:' VAULTPW #make password hidden in terminal
-echo "$VAULTPW" into ~/.vault 
+touch ~/.vault
+echo "$VAULTPW" > ~/.vault 
 echo "export ANSIBLE_VAULT_PASSWORD_FILE=~/.vault" >> ~/.profile #feel free to make this script idempotent, smartypants
 source ~/.profile
 
