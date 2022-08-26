@@ -8,7 +8,7 @@ eagle_registry_name: "eagle{{eagle_animal}}"
 azure_k8s_subscription_pool: standard # enterprise
 
 # zerossl is available but fumbling the bag!
-issuer_provider: zerossl
+#issuer_provider: zerossl
 
 eagle_scenario:
   mode: demo
