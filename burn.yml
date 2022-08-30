@@ -1,16 +1,17 @@
 - hosts: localhost
   vars:
-    cloud_provider: azure
+    cloud_provider: gcp
     domain: "{{ fqdn }}"
     targets:
       - rna
-      #- tekton
+      - tekton
       #- gitlab
   vars_files:
     - vars/eagle.yml
     - vars/dns.yml
     - vars/ssh.yml
     - vars/azure.yml
+    - vars/gcp.yml
     - vars/credentials.yml
     - vars/sentry.yml
   tasks:

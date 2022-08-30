@@ -1,0 +1,7 @@
+gcp_location: us-central1
+gcp_project: ringed-prism-358816
+gcp_service_account_file: vars/raw.json
+gcp_auth_kind: serviceaccount
+gcp_scopes:
+  - https://www.googleapis.com/auth/compute
+gcp_common_tags: {} #tags mean something a lot different in gcp

@@ -1,13 +1,9 @@
-resource_group_name: "eagle-{{azure_location}}"
-dns_resource_group_name: "eagle-dns-{{azure_location}}"
 
 eagle_mark: mk1
-eagle_animal: wolf
+eagle_animal: marmot
 eagle_kv_vault_name: "eaglekv-{{eagle_animal}}-{{eagle_mark}}"
 eagle_registry_name: "eagle{{eagle_animal}}"
-azure_k8s_subscription_pool: standard # enterprise
 
-# zerossl is available but fumbling the bag!
 issuer_provider: zerossl
 
 eagle_scenario:

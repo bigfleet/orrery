@@ -1,0 +1,11 @@
+- name: "Clean up utility GKE instances"
+  google.cloud.gcp_container_cluster:
+    name: "{{ gke_cluster_name }}-{{ item }}"
+    location: "{{ gcp_location }}"
+    state: absent
+    project: "{{ gcp_project }}"
+    auth_kind: "{{ gcp_auth_kind }}"
+    service_account_file: "{{ gcp_service_account_file }}"
+  vars:
+    gke_cluster_name: "eagle-{{eagle_animal}}"
+  loop: "{{ targets }}"
