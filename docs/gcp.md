@@ -12,3 +12,5 @@ gcloud services enable cloudidentity.googleapis.com
 gcloud services enable container.googleapis.com  
 gcloud services enable containerregistry.googleapis.com
 gcloud services enable dns.googleapis.com
+gcloud services enable iamcredentials.googleapis.com
+gcloud services enable cloudresourcemanager.googleapis.com
