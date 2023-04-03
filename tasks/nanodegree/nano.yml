@@ -6,7 +6,7 @@
     name: jaegertracing
     repo_url: "https://jaegertracing.github.io/helm-charts"
 
-- name: Deploy latest jaeger operator release
+- name: "Deploy latest jaeger operator release"
   kubernetes.core.helm:
     name: nano-jaeger
     chart_ref: jaegertracing/jaeger-operator
@@ -49,12 +49,76 @@
     #   fail_on_error: yes
 
 # Wait for results
+- name: Wait for the ES to start
+  kubernetes.core.k8s:
+    definition:
+      apiVersion: v1
+      kind: Pod
+      metadata:
+        name: quickstart-es-default-0
+        namespace: default
+    kubeconfig: "{{ kubeconfig }}"
+    wait: yes
 
-# Grab secret from elasticsearch outputs and prep it for jaeger
+- name: Grab secret from elasticsearch outputs and prep it for jaeger
+  kubernetes.core.k8s_info:
+    kubeconfig: "{{ kubeconfig }}"
+    api_version: v1
+    kind: Secret
+    name: quickstart-es-elastic-user
+    namespace: default
+  register: _jaeger_secret_nfo
+
+- debug:
+    var: _jaeger_secret_nfo
+
+- name: Create a jaeger secret to leverage the elastic user
+  kubernetes.core.k8s:
+    kubeconfig: "{{ kubeconfig }}"
+    state: present
+    definition: 
+      apiVersion: v1
+      kind: Secret
+      type: Opaque
+      metadata:
+        name: "jaeger-secret"
+        namespace: "default"
+      data: 
+        ES_PASSWORD: "{{ _jaeger_secret_nfo.resources[0].data.elastic | b64encode }}"
+        ES_USERNAME: "{{ 'elastic' | b64encode }}"
+
 # Use jaeger operator
+- name: Jaeger quickstart with operator
+  kubernetes.core.k8s:
+    namespace: default
+    state: present
+    definition: "{{ lookup('file', 'jaeger/simple-prod.yml') }}"
+    kubeconfig: "{{ kubeconfig }}"
+
 # Wait for results
+- name: Wait for the Jaeger simple-prod to start
+  kubernetes.core.k8s:
+    definition:
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: simple-prod-query
+        namespace: default
+    kubeconfig: "{{ kubeconfig }}"
+    wait: yes
 
 # Install mongo operator
+- name: Add mongodb repo
+  kubernetes.core.helm_repository:
+    name: mongodb
+    repo_url: "https://mongodb.github.io/helm-charts"
+
+- name: Deploy latest mongodb operator release
+  kubernetes.core.helm:
+    name: mongo-community-operator
+    chart_ref: mongodb/community-operator
+    kubeconfig: "{{ kubeconfig }}"
+
 # Wait for results
 
 # Deploy app stuff
