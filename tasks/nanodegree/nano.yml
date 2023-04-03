@@ -1,0 +1,60 @@
+# pip install kubernetes-validate
+
+# Install jaeger operator
+- name: Add jaegertracing repo
+  kubernetes.core.helm_repository:
+    name: jaegertracing
+    repo_url: "https://jaegertracing.github.io/helm-charts"
+
+- name: Deploy latest jaeger operator release
+  kubernetes.core.helm:
+    name: nano-jaeger
+    chart_ref: jaegertracing/jaeger-operator
+    release_namespace: observability
+    create_namespace: true
+    kubeconfig: "{{ kubeconfig }}"
+    values:
+      rbac:
+        create: true
+        clusterRole: true
+      collector:
+        oltp:
+          enabled: true
+
+- name: ElasticSearch CRDs
+  kubernetes.core.k8s:
+    state: present
+    definition: "{{ lookup('file', 'elasticsearch/crds.yaml') | from_yaml_all }}"
+    kubeconfig: "{{ kubeconfig }}"
+    # validate:
+    #   fail_on_error: yes
+
+- name: ElasticSearch Operator
+  kubernetes.core.k8s:
+    state: present
+    definition: "{{ lookup('file', 'elasticsearch/operator.yaml')  }}"
+    kubeconfig: "{{ kubeconfig }}"
+    # validate:
+    #   fail_on_error: yes
+
+
+# Use elasticsearch operator
+- name: ElasticSearch quickstart (Jaeger backend)
+  kubernetes.core.k8s:
+    namespace: default
+    state: present
+    definition: "{{ lookup('file', 'elasticsearch/quickstart.yml') }}"
+    kubeconfig: "{{ kubeconfig }}"
+    # validate:
+    #   fail_on_error: yes
+
+# Wait for results
+
+# Grab secret from elasticsearch outputs and prep it for jaeger
+# Use jaeger operator
+# Wait for results
+
+# Install mongo operator
+# Wait for results
+
+# Deploy app stuff

@@ -1,0 +1,32 @@
+- hosts: localhost
+  vars:
+    cloud_provider: azure
+    domain: "{{ fqdn }}"
+    slug: "{{ query('community.general.random_string', upper=false, numbers=true, special=false)[0] }}"
+  vars_files:
+    - vars/eagle.yml
+    - vars/dns.yml
+    - vars/ssh.yml
+    - vars/azure.yml
+    - vars/credentials.yml
+    - vars/sentry.yml
+  tasks:
+  - include_role:
+      name: bigfleet.eagle
+    vars:
+      phase: 0
+      eagle_params:
+        azure:
+          resource_group_name: "eagle-{{azure_location}}"
+          dns_resource_group_name: "eagle-dns-{{azure_location}}"
+          location: "{{azure_location}}"
+          tags: "{{ az_common_tags }}"
+        kv:
+          key_name: eaglespcreds
+          vault_name: "{{ eagle_kv_vault_name }}"
+        issuer_provider: "{{ issuer_provider | default('letsencrypt') }}"
+
+  - debug:
+      msg: "Install jaeger operator and elasticsearch here"
+
+  - include_tasks: tasks/nanodegree/nano.yml
