@@ -1,0 +1,16 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: nanodegree-certificate
+  namespace: default
+spec:
+  dnsNames:
+  - nanodegree.tekton.wolf.bigfleet.dev
+  - www.nanodegree.tekton.wolf.bigfleet.dev
+  issuerRef:
+    kind: ClusterIssuer
+    name: zerossl-monitoring
+  secretName: nanodegree-certificate
+  subject:
+    organizations:
+    - wolf.bigfleet.dev

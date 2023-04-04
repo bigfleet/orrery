@@ -112,6 +112,24 @@
     create_namespace: true
     kubeconfig: "{{ kubeconfig }}"
 
-# Wait for results
+# Use mongo operator
+- name: Mongo quickstart
+  kubernetes.core.k8s:
+    namespace: default
+    state: present
+    definition: "{{ lookup('file', 'mongodb/mongo.yml') }}"
+    kubeconfig: "{{ kubeconfig }}"
 
 # Deploy app stuff
+- name: Nano app
+  kubernetes.core.k8s:
+    namespace: default
+    state: present
+    definition: "{{ lookup('file', item) }}"
+    kubeconfig: "{{ kubeconfig }}"
+  loop:
+    - 'nano/backend.yaml'
+    - 'nano/frontend.yaml'
+    - 'nano/trial.yaml'
+    - 'nano/ingress.yaml'
+    - 'nano/certificate.yaml'    

@@ -1,0 +1,41 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: jae-ingress
+  namespace: default
+  annotations:
+    cert-manager.io/cluster-issuer: zerossl-monitoring
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: /$1
+    kubernetes.io/tls-acme: "true"
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: "nanodegree.tekton.wolf.bigfleet.dev"
+      http:
+        paths:
+          - pathType: Prefix
+            path: /trial(/.*)
+            backend:
+              service: 
+                name: trial-service
+                port:
+                  number: 8082
+          - pathType: Prefix
+            path: /backend(/.*)
+            backend:
+              service: 
+                name: backend-service
+                port:
+                  number: 8081
+          - pathType: Prefix
+            path: /(.*)
+            backend:
+              service: 
+                name: frontend-service
+                port:
+                  number: 8080
+  tls:
+  - hosts:
+    - nanodegree.tekton.wolf.bigfleet.dev
+    secretName: nanodegree-certificate
