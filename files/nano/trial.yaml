@@ -20,6 +20,12 @@ spec:
         image: bigfleet/jaeger-trial:v1
         ports:
         - containerPort: 8080
+        env:
+        - name: GITHUB_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: github-token-secret
+              key: token
 ---
 apiVersion: v1
 kind: Service

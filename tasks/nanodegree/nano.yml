@@ -120,6 +120,35 @@
     definition: "{{ lookup('file', 'mongodb/mongo.yml') }}"
     kubeconfig: "{{ kubeconfig }}"
 
+
+- name: Arrange for GitHub app token to be available to app
+  kubernetes.core.k8s:
+    kubeconfig: "{{ kubeconfig }}"
+    state: present
+    definition: 
+      apiVersion: v1
+      kind: Secret
+      type: Opaque
+      metadata:
+        name: "github-token-secret"
+        namespace: "default"
+      data: 
+        token: "{{ github_token | b64encode }}"
+
+- name: For the mongo DB
+  kubernetes.core.k8s:
+    kubeconfig: "{{ kubeconfig }}"
+    state: present
+    definition: 
+      apiVersion: v1
+      kind: Secret
+      type: Opaque
+      metadata:
+        name: "mongodb-url"
+        namespace: "default"
+      data: 
+        "connectionString.standardSrv": "{{ mongodb_url | b64encode }}"
+
 # Deploy app stuff
 - name: Nano app
   kubernetes.core.k8s:
